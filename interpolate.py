@@ -21,10 +21,12 @@ def interpolation(signal, unvoiced_symbol):
     fbound = [None, None]
     signal_t_1 = signal[0]
     isignal = np.copy(signal)
+    uv = np.ones(signal.shape, dtype=np.int8)
     for t in range(1, signal.shape[0]):
         if signal[t] > unvoiced_symbol and signal_t_1 <= unvoiced_symbol and tbound == [None, None]:
             # First part of signal is unvoiced, set to constant first voiced
             isignal[:t] = signal[t]
+            uv[:t] = 0
         elif signal[t] <= unvoiced_symbol and signal_t_1 > unvoiced_symbol:
             tbound[0] = t - 1
             fbound[0] = signal_t_1
@@ -32,6 +34,7 @@ def interpolation(signal, unvoiced_symbol):
             tbound[1] = t
             fbound[1] = signal[t]
             isignal[tbound[0]:tbound[1]] = linear_interpolation(tbound, fbound)
+            uv[tbound[0]:tbound[1]] = 0
             # reset values
             tbound = [None, None]
             fbound = [None, None]
@@ -39,10 +42,11 @@ def interpolation(signal, unvoiced_symbol):
     # now end of signal if necessary
     if tbound[0] is not None:
         isignal[tbound[0]:] = fbound[0]
-    return isignal
+        uv[tbound[0]:] = 0
+    return isignal, uv
 
 
-def process_guia(guia_file, unvoiced_symbol):
+def process_guia(guia_file, unvoiced_symbol, gen_uv):
     # Interpolate files values
     with open(guia_file) as fh:
         for i, filename in enumerate(fh):
@@ -50,18 +54,24 @@ def process_guia(guia_file, unvoiced_symbol):
                 dire, fullname = os.path.split(filename.rstrip())
             basename, ext = os.path.splitext(fullname)
             raw = np.loadtxt(filename.rstrip())
-            interp = interpolation(raw, unvoiced_symbol)
+            interp, uv = interpolation(raw, unvoiced_symbol)
             np.savetxt(os.path.join(dire, basename + '.i' + ext), interp)
             print('Writing interplation to {}'.format(os.path.join(dire,
                                                                    basename +
                                                                    '.i' + ext)))
+            if gen_uv:
+                print('Writing u/v mask to {}'.format(os.path.join(dire,
+                                                                   basename +
+                                                                   '.uv')))
+                np.savetxt(os.path.join(dire, basename + '.uv'), uv)
+
     return interp
 
 def main(opts):
     if opts.f0_guia:
-        process_guia(opts.f0_guia, -10000000000)
+        process_guia(opts.f0_guia, -10000000000, opts.gen_uv)
     if opts.vf_guia:
-        process_guia(opts.vf_guia, 1e3)
+        process_guia(opts.vf_guia, 1e3, opts.gen_uv)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('Here are the main options to interpolate'
@@ -74,12 +84,9 @@ if __name__ == '__main__':
                         default=None, help='Guia file containing pointers to '
                                            'the different vf files to '
                                            'interpolate.')
-    """
-    TODO: add this?
     parser.add_argument('--no-uv', dest='gen_uv',
                         action='store_false', help='U/V masks are NOT '
                                                    'generated.')
-    """
     parser.set_defaults(gen_uv=True)
     opts = parser.parse_args()
     main(opts)
