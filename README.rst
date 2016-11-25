@@ -6,4 +6,4 @@ very suitable for statistical parametric speech synthesis systems that use Deep 
 
 References:
 
-* `"Improved HNM-based Vocoder for Statistical Synthesizers"<http://www.isca-speech.org/archive/archive_papers/interspeech_2011/i11_1809.pdf>`
+* `"Improved HNM-based Vocoder for Statistical Synthesizers" <http://www.isca-speech.org/archive/archive_papers/interspeech_2011/i11_1809.pdf>`_
