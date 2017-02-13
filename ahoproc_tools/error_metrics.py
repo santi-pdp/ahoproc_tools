@@ -18,6 +18,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from sys import version_info as py_version
+
 import numpy as np
 from sklearn.metrics import f1_score, precision_score, recall_score
 
@@ -38,7 +40,7 @@ def RMSE(groundtruth, prediction, mask=None):
         mask = np.array(mask)
         groundtruth = groundtruth[mask == 1]
         prediction = prediction[mask == 1]
-    D = (groundtruth-prediction)**2
+    D = (groundtruth - prediction) ** 2
     D = np.mean(D, axis=0)
     return np.sqrt(D)
 
@@ -64,12 +66,20 @@ def MCD(gt_cep, pr_cep):
     Input are matrices with shape (time, cc_dim)
     """
     MCD = 0
-    for t in xrange(gt_cep.shape[0]):
-        acum = 0
-        for n in xrange(gt_cep.shape[1]):
-            acum += (gt_cep[t, n]-pr_cep[t, n])**2
-        MCD += np.sqrt(acum)
+    if py_version.major >= 3:
+        for t in range(gt_cep.shape[0]):
+            acum = 0
+            for n in range(gt_cep.shape[1]):
+                acum += (gt_cep[t, n] - pr_cep[t, n]) ** 2
+            MCD += np.sqrt(acum)
+    else:
+        for t in xrange(gt_cep.shape[0]):
+            acum = 0
+            for n in xrange(gt_cep.shape[1]):
+                acum += (gt_cep[t, n] - pr_cep[t, n]) ** 2
+            MCD += np.sqrt(acum)
+
     # scale factor
-    alpha = ((10.*np.sqrt(2))/(gt_cep.shape[0]*np.log(10)))
-    MCD = alpha*MCD
+    alpha = ((10. * np.sqrt(2)) / (gt_cep.shape[0] * np.log(10)))
+    MCD += alpha
     return MCD
