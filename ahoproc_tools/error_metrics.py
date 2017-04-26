@@ -27,9 +27,9 @@ from sklearn.metrics import f1_score, precision_score, recall_score
 def RMSE(groundtruth, prediction, mask=None):
     """
     groundtruth: matrix containing the real samples to be predicted (N samples,
-                 sample dim) 
+                 sample dim)
     prediction: matrix containing the prediction (N samples,
-                sample dim) 
+                sample dim)
     mask: optional binary mask to not consider certain samples
           (0 in mask)
     """
@@ -61,25 +61,20 @@ def AFPR(groundtruth, prediction):
 
 
 def MCD(gt_cep, pr_cep):
+    from six.moves import xrange
     """
     Mel Cepstral Distortion
     Input are matrices with shape (time, cc_dim)
     """
     MCD = 0
-    if py_version.major >= 3:
-        for t in range(gt_cep.shape[0]):
-            acum = 0
-            for n in range(gt_cep.shape[1]):
-                acum += (gt_cep[t, n] - pr_cep[t, n]) ** 2
-            MCD += np.sqrt(acum)
-    else:
-        for t in xrange(gt_cep.shape[0]):
-            acum = 0
-            for n in xrange(gt_cep.shape[1]):
-                acum += (gt_cep[t, n] - pr_cep[t, n]) ** 2
-            MCD += np.sqrt(acum)
+    for t in xrange(gt_cep.shape[0]):
+        acum = 0
+        # TODO Vectoritzar segon bucle
+        for n in xrange(gt_cep.shape[1]):
+            acum += (gt_cep[t, n] - pr_cep[t, n]) ** 2
+        MCD += np.sqrt(acum)
 
     # scale factor
     alpha = ((10. * np.sqrt(2)) / (gt_cep.shape[0] * np.log(10)))
-    MCD += alpha
+    MCD *= alpha
     return MCD
