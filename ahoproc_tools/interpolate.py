@@ -28,6 +28,7 @@ Here are the main options to interpolate Ahocoder features
 from __future__ import print_function
 
 import argparse
+import struct
 import os
 
 import numpy as np
@@ -72,36 +73,56 @@ def interpolation(signal, unvoiced_symbol):
     return isignal, uv
 
 
-def process_file(filename, unvoiced_symbol, gen_uv):
+def process_file(filename, unvoiced_symbol, gen_uv, bin_mode=False):
     dire, fullname = os.path.split(filename.rstrip())
     basename, ext = os.path.splitext(fullname)
-    raw = np.loadtxt(filename)
+    if bin_mode:
+        # read raw floats from bitstream
+        with open(filename, 'rb') as bs_f:
+            fs_bs = bs_f.read()
+        raw = struct.unpack('{}f'.format(int(len(fs_bs) / 4)), fs_bs)
+        raw = np.array(raw, dtype=np.float32)
+    else:
+        # load floats in txt format
+        raw = np.loadtxt(filename)
     interp, uv = interpolation(raw, unvoiced_symbol)
     out_interp_file = os.path.join(dire, basename + '.i' + ext)
     print('Writing interpolation to {}'.format(out_interp_file))
-    np.savetxt(out_interp_file, interp)
+    if bin_mode:
+        # write raw floats into bitstream
+        interp_bs = struct.pack('%sf' % len(interp), *interp)
+        with open(out_interp_file, 'wb') as interp_f:
+            interp_f.write(interp_bs)
+    else:
+        np.savetxt(out_interp_file, interp)
     if gen_uv:
         out_uv_file = os.path.join(dire, basename + '.uv')
         print('Writing u/v mask to {}'.format(out_uv_file))
-        np.savetxt(out_interp_file, uv)
+        if bin_mode:
+            # write raw floats into bitstream
+            uv_bs = struct.pack('%sf' % len(uv), *uv)
+            with open(out_uv_file, 'wb') as uv_f:
+                uv_f.write(uv_bs)
+        else:
+            np.savetxt(out_uv_file, uv)
 
 
-def process_guia(guia_file, unvoiced_symbol, gen_uv):
+def process_guia(guia_file, unvoiced_symbol, gen_uv, bin_mode=False):
     # Interpolate files values
     with open(guia_file) as fh:
         for i, filename in enumerate(fh):
-            process_file(filename.rstrip(), unvoiced_symbol, gen_uv)
+            process_file(filename.rstrip(), unvoiced_symbol, gen_uv, bin_mode)
 
 
 def main(opts):
     if opts.f0_file:
-        process_file(opts.f0_file, -10000000000, opts.gen_uv)
+        process_file(opts.f0_file, -10000000000, opts.gen_uv, opts.bin_mode)
     if opts.f0_guia:
-        process_guia(opts.f0_guia, -10000000000, opts.gen_uv)
+        process_guia(opts.f0_guia, -10000000000, opts.gen_uv, opts.bin_mode)
     if opts.vf_file:
-        process_file(opts.vf_file, 1e3, opts.gen_uv)
+        process_file(opts.vf_file, 1e3, opts.gen_uv, opts.bin_mode)
     if opts.vf_guia:
-        process_guia(opts.vf_guia, 1e3, opts.gen_uv)
+        process_guia(opts.vf_guia, 1e3, opts.gen_uv, otps.bin_mode)
 
 
 if __name__ == '__main__':
@@ -122,6 +143,8 @@ if __name__ == '__main__':
     parser.add_argument('--no-uv', dest='gen_uv',
                         action='store_false', help='U/V masks are NOT '
                                                    'generated.')
+    parser.add_argument('--bin_mode', action='store_true', default=False,
+                        help='Work with binary acoustic files, not txt.')
     parser.set_defaults(gen_uv=True)
     options = parser.parse_args()
     main(options)
