@@ -1,0 +1,46 @@
+"""
+MIT License
+
+Copyright (c) 2016 Santi Dsp
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+Here are the main options to interpolate Ahocoder features
+(either can be lf0 or voided-frequency).
+"""
+
+from __future__ import print_function
+import numpy as np
+import struct
+
+def read_aco_file(filename, out_shape=None):
+    with open(filename, 'rb') as bs_f:
+        fs_bs = bs_f.read()
+    raw = struct.unpack('{}f'.format(int(len(fs_bs) / 4)), fs_bs)
+    raw = np.array(raw, dtype=np.float32)
+    if out_shape is not None:
+        raw = raw.reshape(out_shape)
+    return raw
+
+def write_aco_file(filename, data):
+    with open(filename, 'wb') as bs_f:
+        # flatten all
+        data = data.reshape((-1,))
+        data_bs = struct.pack('%sf' % len(data), *data)
+        bs_f.write(data_bs)
