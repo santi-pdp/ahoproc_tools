@@ -26,6 +26,7 @@ Here are the main options to interpolate Ahocoder features
 """
 
 from __future__ import print_function
+from subprocess import run, PIPE
 import numpy as np
 import struct
 
@@ -44,3 +45,20 @@ def write_aco_file(filename, data):
         data = data.reshape((-1,))
         data_bs = struct.pack('%sf' % len(data), *data)
         bs_f.write(data_bs)
+
+def aco2wav(basename, out_name=None):
+    # basename: acoustic file without cc, lf0 or fv extension
+    cc_name = basename + '.cc'
+    lf0_name = basename + '.lf0'
+    fv_name = basename + '.fv'
+    if out_name is None:
+        wav_name = basename + '.wav'
+    else:
+        wav_name = out_name
+    try:
+        p = run(['ahodecoder16_64', lf0_name, cc_name, fv_name, wav_name],
+                stdout=PIPE, 
+                encoding='ascii')
+    except FileNotFoundError:
+        print('Please, make sure you have ahocoder16_64 binary in your $PATH')
+        raise
