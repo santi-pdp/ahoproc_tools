@@ -29,6 +29,7 @@ from __future__ import print_function
 from subprocess import run, PIPE
 import numpy as np
 import struct
+import os
 
 def read_aco_file(filename, out_shape=None):
     with open(filename, 'rb') as bs_f:
