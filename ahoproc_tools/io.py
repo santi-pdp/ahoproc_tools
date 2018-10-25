@@ -62,3 +62,18 @@ def aco2wav(basename, out_name=None):
     except FileNotFoundError:
         print('Please, make sure you have ahocoder16_64 binary in your $PATH')
         raise
+
+def wav2aco(wav_name, out_name=None):
+    aco_name = out_name
+    if out_name is None:
+        aco_name = os.path.splitext(wav_name)[0]
+    cc_name = aco_name + '.cc'
+    lf0_name = aco_name + '.lf0'
+    fv_name = aco_name + '.fv'
+    try:
+        p = run(['ahocoder16_64', wav_name, lf0_name, cc_name, fv_name],
+                stdout=PIPE, 
+                encoding='ascii')
+    except FileNotFoundError:
+        print('Please, make sure you have ahocoder16_64 binary in your $PATH')
+        raise
