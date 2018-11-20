@@ -60,7 +60,6 @@ def aco2wav(basename, out_name=None, pitch_ext='.lf0'):
         p = run(['ahodecoder16_64', lf0_name, cc_name, fv_name, wav_name],
                 stdout=PIPE, 
                 encoding='ascii')
-        #print(p)
     except FileNotFoundError:
         print('Please, make sure you have ahocoder16_64 binary in your $PATH')
         raise
