@@ -70,6 +70,9 @@ def interpolation(signal, unvoiced_symbol):
     if tbound[0] is not None:
         isignal[tbound[0]:] = fbound[0]
         uv[tbound[0]:] = 0
+    # if all are unvoiced symbols, uv is zeros
+    if np.all(isignal <= unvoiced_symbol):
+        uv = np.zeros(signal.shape, dtype=np.int8)
     return isignal, uv
 
 
